@@ -16,11 +16,42 @@ export class ActivityService {
     });
   }
 
-  findAll(userId: number) {
+  findAll(userId: number, category?: string, search?: string) {
     return this.prisma.activity.findMany({
-      where: { userId },
+      where: {
+        userId,
+        ...(category && { category }),
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+      },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async getStats(userId: number) {
+    const total = await this.prisma.activity.count({
+      where: { userId },
+    });
+
+    const grouped = await this.prisma.activity.groupBy({
+      by: ['category'],
+      where: { userId },
+      _count: {
+        _all: true,
+      },
+    });
+
+    return {
+      total,
+      byCategory: grouped.map((item) => ({
+        category: item.category,
+        count: item._count._all,
+      })),
+    };
   }
 
   async findOne(id: number, userId: number) {

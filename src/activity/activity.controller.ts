@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -26,8 +27,17 @@ export class ActivityController {
   }
 
   @Get()
-  findAll(@Req() req: any) {
-    return this.activityService.findAll(req.user.sub);
+  findAll(
+    @Req() req: any,
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.activityService.findAll(req.user.sub, category, search);
+  }
+
+  @Get('stats')
+  getStats(@Req() req: any) {
+    return this.activityService.getStats(req.user.sub);
   }
 
   @Get(':id')
